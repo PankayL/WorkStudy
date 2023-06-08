@@ -1,0 +1,11 @@
+#spring:
+#  datasource:
+#    url: jdbc:sqlserver://127.0.0.1:1433;DatabaseName=db_workStudyProgram;trustServerCertificate=true
+#    username: sa
+#    password: pkzking147258369
+#    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring:
+  aop:
+    #auto: true #默认为true，可省略
+    proxy-target-class: true # 默认为false即JDK动态代理，我们一般要设为true，使用CGLIB代理
+

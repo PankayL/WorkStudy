@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.StudentAssetsMapper">
+<!--获取学生资产，通过学号-->
+    <select id="getStudentAssetsById" resultType="studentAssets">
+        {call getStudentAssetsByNo (
+        #{studentNo,  mode=IN, jdbcType=VARCHAR}
+        )}
+    </select>
+<!--更新学生资产-->
+    <update id="updateStudentAssets">
+        {call updateStudentAssets (
+        #{studentNo,  mode=IN, jdbcType=VARCHAR},
+        #{studentMoney,  mode=IN, jdbcType=DOUBLE},
+        #{version,  mode=IN, jdbcType=INTEGER}
+        )}
+    </update>
+
+</mapper>

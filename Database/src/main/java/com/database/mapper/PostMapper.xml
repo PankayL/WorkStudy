@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.PostMapper">
+<!--获取完整招聘信息-->
+    <resultMap id="PostAndTypeAndCompany" type="post">
+        <result property="postNo" column="post_no"/>
+        <result property="postTitle" column="post_title"/>
+        <result property="postDetails" column="post_details"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="postState" column="post_state"/>
+        <result property="deleted" column="deleted"/>
+        <result property="postMoney" column="post_money"/>
+        <result property="postCount" column="post_count"/>
+        <association property="postType" column="post_type" javaType="postType" select="getPostTypeById"/>
+        <association property="company" column="company_no" javaType="company" select="getCompanyById"/>
+    </resultMap>
+    <select id="getPostTypeById" resultType="postType">
+        select * from PostType where type_no = #{post_type}
+    </select>
+    <select id="getCompanyById" resultType="company">
+        select * from Company where company_no = #{company_no}
+    </select>
+<!--  通过招聘单号获取单个招聘信息  -->
+    <select id="getPostById" resultMap="PostAndTypeAndCompany">
+        select * from Post where post_no = #{postNo}
+    </select>
+<!--  分页查询  -->
+    <select id="getPostListLimit" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state = #{postState}
+        and post_type like #{typeNo} and company_no in (select company_no from Company where company_name like #{companyName}))
+        and deleted = #{deleted} and post_state = #{postState} and post_type like #{typeNo}
+        and company_no in (select company_no from Company where company_name like #{companyName})
+    </select>
+    <select id="getPostListLimitAsc" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state = #{postState}
+        and post_type like #{typeNo} and company_no in (select company_no from Company where company_name like #{companyName}) order by post_money asc)
+        and deleted = #{deleted} and post_state = #{postState} and post_type like #{typeNo}
+        and company_no in (select company_no from Company where company_name like #{companyName}) order by post_money asc
+    </select>
+    <select id="getPostListLimitDesc" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state = #{postState}
+        and post_type like #{typeNo} and company_no in (select company_no from Company where company_name like #{companyName}) order by post_money Desc)
+        and deleted = #{deleted} and post_state = #{postState} and post_type like #{typeNo}
+        and company_no in (select company_no from Company where company_name like #{companyName}) order by post_money Desc
+    </select>
+    <select id="getPostListLimitCountAsc" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state = #{postState}
+        and post_type like #{typeNo} and company_no in (select company_no from Company where company_name like #{companyName}) order by post_count asc)
+        and deleted = #{deleted} and post_state = #{postState} and post_type like #{typeNo}
+        and company_no in (select company_no from Company where company_name like #{companyName}) order by post_count asc
+    </select>
+    <select id="getPostListLimitCountDesc" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state = #{postState}
+        and post_type like #{typeNo} and company_no in (select company_no from Company where company_name like #{companyName}) order by post_count Desc)
+        and deleted = #{deleted} and post_state = #{postState} and post_type like #{typeNo}
+        and company_no in (select company_no from Company where company_name like #{companyName}) order by post_count Desc
+    </select>
+    <select id="getPostListLimitByCompanyNo" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where deleted = #{deleted} and post_state like #{postState}
+        and company_no = #{companyNo})
+        and deleted = #{deleted} and post_state like #{postState} and company_no = #{companyNo}
+    </select>
+    <!--  获取总数  -->
+    <select id="getPostTotal" resultType="_int">
+        { call getPostTotal (
+        #{companyName, mode=IN, jdbcType=VARCHAR},
+        #{typeNo, mode=IN, jdbcType=VARCHAR},
+        #{postState, mode=IN, jdbcType=INTEGER},
+        #{deleted, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--  删除招聘  -->
+    <select id="deletePost">
+        { call deletePost (
+        #{postNo, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--  审核招聘申请  -->
+    <update id="checkPost">
+        update Post set post_state = #{postState} where post_no = #{postNo}
+    </update>
+<!--  浏览次数加1  -->
+    <update id="setPostCount">
+        { call setPostCount (
+        #{postNo, mode=IN, jdbcType=INTEGER},
+        #{postCount, mode=IN, jdbcType=INTEGER}
+        ) }
+    </update>
+<!--  获取招聘总数  -->
+    <select id="getPostTotalByCompanyNo" resultType="_int">
+        select count(*) from Post where company_no = #{companyNo}
+    </select>
+<!--  更新招聘状态  -->
+    <update id="updateCompanyPostStateByPostNo">
+        update Post set post_state = #{postState} where post_no = #{postNo}
+    </update>
+<!--  获取单位申请列表  -->
+    <select id="getPostListLimitByCompanyNoDesc" resultMap="PostAndTypeAndCompany">
+        select top ${pageSize} * from Post where post_no not in
+        (select top ${(pageNum - 1) * pageSize} post_no from Post where company_no = #{companyNo} order by post_state Desc)
+        and company_no = #{companyNo} order by post_state Desc
+    </select>
+<!--  添加招聘Post  -->
+    <insert id="addPost">
+        insert into Post(company_no,post_type,post_title,post_details,start_time,end_time,post_money)
+        values (#{companyNo},#{postType},#{postTitle},#{postDetails},#{startTime},#{endTime},#{postMoney})
+    </insert>
+</mapper>

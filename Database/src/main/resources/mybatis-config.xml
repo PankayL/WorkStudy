@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--核心配置文件中的标签必须按照固定的顺序：
+        properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,objectWrapperFactory?,
+        reflectorFactory?,plugins?,environments?,databaseIdProvider?,mappers?-->
+
+    <!--  引入外部配置文件  -->
+    <properties resource="application.properties">
+
+    </properties>
+
+    <settings>
+        <!--    标准日志    -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+<!--        <setting name="logImpl" value="LOG4J"/>-->
+
+        <!--    开启驼峰   -->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+
+    </settings>
+
+    <!--  给实体类起别名  -->
+    <typeAliases>
+        <package name="com.database.pojo"/>
+    </typeAliases>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="com/database/mapper/CollegeMapper.xml"/>
+        <mapper resource="com/database/mapper/CollegeClassMapper.xml"/>
+        <mapper resource="com/database/mapper/CollegeMajorMapper.xml"/>
+        <mapper resource="com/database/mapper/CompanyMapper.xml"/>
+        <mapper resource="com/database/mapper/CompanyTypeMapper.xml"/>
+        <mapper resource="com/database/mapper/ManagerMapper.xml"/>
+        <mapper resource="com/database/mapper/PostMapper.xml"/>
+        <mapper resource="com/database/mapper/PostEvaluateMapper.xml"/>
+        <mapper resource="com/database/mapper/PostTypeMapper.xml"/>
+        <mapper resource="com/database/mapper/StudentMapper.xml"/>
+        <mapper resource="com/database/mapper/StudentAssetsMapper.xml"/>
+        <mapper resource="com/database/mapper/StudentIncomeMapper.xml"/>
+        <mapper resource="com/database/mapper/StudentResumeMapper.xml"/>
+    </mappers>
+</configuration>

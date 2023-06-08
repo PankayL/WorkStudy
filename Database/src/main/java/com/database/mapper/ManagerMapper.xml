@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.ManagerMapper">
+<!--获取管理员信息-->
+    <select id="getManagerById" resultType="manager">
+        { call getManagerByNo(
+        #{managerNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+<!--登陆检测-->
+    <select id="checkManagerNoLogin" resultType="_int">
+        { call checkManagerNoLogin(
+        #{managerNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+
+</mapper>

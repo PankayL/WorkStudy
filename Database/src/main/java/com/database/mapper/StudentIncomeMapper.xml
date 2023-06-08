@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.StudentIncomeMapper">
+<!--获取完整明细-->
+    <resultMap id="StudentIncomeStudent" type="studentIncome">
+        <result property="incomeNo" column="income_no"/>
+        <result property="incomeMoney" column="income_money"/>
+        <result property="time1" column="time"/>
+        <result property="time2" column="time"/>
+        <result property="isFlag" column="isFlag"/>
+        <association property="student" column="student_no" javaType="student" select="getStudentById"/>
+        <association property="company" column="company_no" javaType="company" select="getCompanyById"/>
+    </resultMap>
+    <select id="getStudentById" resultType="student">
+        select * from Student where student_no = #{student_no}
+    </select>
+    <select id="getCompanyById" resultType="company">
+        select * from Company where company_no = #{company_no}
+    </select>
+<!--  获取收支列表  -->
+    <select id="getStudentIncomeListLimit" resultMap="StudentIncomeStudent">
+        select top ${pageSize} * from StudentIncome where income_no not in
+        (select top ${(pageNum - 1) * pageSize} income_no from StudentIncome where student_no = #{studentNo} and isFlag like #{isFlag} order by time Desc)
+        and student_no = #{studentNo} and isFlag like #{isFlag} order by time Desc
+    </select>
+<!--  获取收支总数  -->
+    <select id="getStudentIncomeTotal" resultType="_int">
+        select count(*) from StudentIncome where student_no = #{studentNo} and isFlag like #{isFlag}
+    </select>
+
+<!--  取款  -->
+    <insert id="drawStudentIncome">
+        { call drawStudentIncome(
+        #{studentNo, mode=IN, jdbcType=VARCHAR},
+        #{incomeMoney, mode=IN, jdbcType=DOUBLE}
+        ) }
+    </insert>
+<!--  发工资  -->
+    <insert id="giveStudentIncome">
+        insert into StudentIncome(student_no,income_money) values (#{studentNo},#{incomeMoney})
+    </insert>
+</mapper>

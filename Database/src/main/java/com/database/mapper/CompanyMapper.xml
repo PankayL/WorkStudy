@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.CompanyMapper">
+<!--获取完整单位信息-->
+    <resultMap id="CompanyAndType" type="company">
+        <result property="companyNo" column="company_no"/>
+        <result property="companyName" column="company_name"/>
+        <result property="companyPassword" column="company_password"/>
+        <result property="companyPeople" column="company_people"/>
+        <association property="companyType" column="company_type" javaType="companyType" select="getCompanyTypeById"/>
+    </resultMap>
+    <select id="getCompanyTypeById" resultType="companyType">
+        select * from CompanyType where type_no = #{company_type}
+    </select>
+<!--  通过企业号获取单个企业信息  -->
+    <select id="getCompanyById" resultMap="CompanyAndType">
+        select * from Company where company_no = #{companyNo}
+    </select>
+<!--  分页查询  -->
+    <select id="getCompanyListLimit" resultMap="CompanyAndType">
+        select top ${pageSize} * from Company where company_no not in
+        (select top ${(pageNum - 1) * pageSize} company_no from Company where deleted = #{deleted} and company_name like #{companyName}
+        and company_type like #{typeNo} and company_people like #{peopleName})
+        and deleted = #{deleted} and company_name like #{companyName} and company_type like #{typeNo} and company_people like #{peopleName}
+    </select>
+<!--获取分页总数-->
+    <select id="getCompanyTotal" resultType="_int">
+        { call getCompanyTotal (
+        #{companyName, mode=IN, jdbcType=VARCHAR},
+        #{peopleName, mode=IN, jdbcType=VARCHAR},
+        #{typeNo, mode=IN, jdbcType=VARCHAR},
+        #{deleted, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--  添加单位  -->
+    <!--  检测账号是否已经存在  -->
+    <select id="checkCompanyNo" resultType="_int" statementType = "CALLABLE">
+        {call checkCompanyNo (
+        #{companyNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+    <!--  添加  -->
+    <select id="addCompany">
+        {call addCompany (
+        #{companyName, mode=IN, jdbcType=VARCHAR},
+        #{companyNo, mode=IN, jdbcType=VARCHAR},
+        #{companyPassword, mode=IN, jdbcType=VARCHAR},
+        #{companyPeople, mode=IN, jdbcType=VARCHAR},
+        #{companyType, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--  删除单位  -->
+    <select id="deleteCompany">
+        {call deleteCompany (
+        #{companyNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+<!--  修改单位信息  -->
+    <select id="updateCompany">
+        {call updateCompany (
+        #{type, mode=IN, jdbcType=INTEGER},
+        #{companyNo, mode=IN, jdbcType=VARCHAR},
+        #{companyName, mode=IN, jdbcType=VARCHAR},
+        #{peopleName, mode=IN, jdbcType=VARCHAR},
+        #{companyPassword, mode=IN, jdbcType=VARCHAR},
+        #{companyType, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--  登陆检测  -->
+    <select id="checkCompanyNoLogin" resultType="_int" statementType = "CALLABLE">
+        {call checkCompanyNoLogin (
+        #{companyNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+
+</mapper>

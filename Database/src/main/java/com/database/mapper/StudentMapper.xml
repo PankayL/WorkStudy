@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.StudentMapper">
+<!--获取学生总数-->
+    <select id="getStudentTotal" resultType="_int" statementType = "CALLABLE">
+        { call getStudentTotal(
+        #{type, mode=IN, jdbcType=INTEGER},
+        #{collegeNo, mode=IN, jdbcType=INTEGER},
+        #{majorNo, mode=IN, jdbcType=INTEGER},
+        #{classNo, mode=IN, jdbcType=INTEGER},
+        #{sex, mode=IN, jdbcType=VARCHAR},
+        #{deleted, mode=IN, jdbcType=INTEGER}
+        ) }
+    </select>
+<!--获取学生的完整信息-->
+    <resultMap id="StudentClass" type="student">
+        <result property="studentNo" column="student_no"/>
+        <result property="studentPassword" column="student_password"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentSex" column="student_sex"/>
+        <result property="deleted" column="deleted"/>
+        <result property="stuName" column="stuName"/>
+        <association property="collegeClass" column="class_no" javaType="collegeClass" select="getClassById"/>
+    </resultMap>
+    <select id="getClassById" resultMap="ClassMajorCollege">
+        select * from CollegeClass where class_no = #{class_no}
+    </select>
+    <resultMap id="ClassMajorCollege" type="collegeClass">
+        <result property="classNo" column="class_no"/>
+        <result property="className" column="class_name"/>
+        <association property="collegeMajor" column="major_no" javaType="collegeMajor" select="getMajorById"/>
+    </resultMap>
+    <select id="getMajorById" resultMap="MajorCollege">
+        select * from CollegeMajor where major_no = #{major_no}
+    </select>
+    <resultMap id="MajorCollege" type="collegeMajor">
+        <result property="majorNo" column="major_no"/>
+        <result property="majorName" column="major_name"/>
+        <association property="college" column="college_no" javaType="College" select="getCollegeById"/>
+    </resultMap>
+    <select id="getCollegeById" resultType="college">
+        select * from College where college_no = #{college_no}
+    </select>
+<!--  通过学号获取学生信息  -->
+    <select id="getStudentById" resultMap="StudentClass">
+        select * from Student where student_no = #{studentNo}
+    </select>
+<!--  分页查询  -->
+    <select id="getStudentLimit" resultMap="StudentClass">
+        select top ${pageSize} * from Student where student_no not in
+        (select top ${(pageNum - 1) * pageSize} student_no from Student where deleted = #{deleted} and student_sex like #{sex})
+        and deleted = #{deleted} and student_sex like #{sex}
+    </select>
+    <select id="getStudentLimitByCollege" resultMap="StudentClass">
+        select top ${pageSize} * from Student where class_no in
+        (select class_no from CollegeClass where major_no in (select major_no from CollegeMajor where college_no = #{collegeNo}))
+        and student_no not in
+        (select top ${(pageNum - 1) * pageSize} student_no from Student where class_no in
+        (select class_no from CollegeClass where major_no in (select major_no from CollegeMajor where college_no = #{collegeNo}))
+        and deleted = #{deleted} and student_sex like #{sex})
+        and deleted = #{deleted} and student_sex like #{sex}
+    </select>
+    <select id="getStudentLimitByMajor" resultMap="StudentClass">
+        select top ${pageSize} * from Student where class_no in
+        (select class_no from CollegeClass where major_no = #{majorNo})
+        and student_no not in
+        (select top ${(pageNum - 1) * pageSize} student_no from Student where class_no in
+        (select class_no from CollegeClass where major_no = #{majorNo})
+        and deleted = #{deleted} and student_sex like #{sex})
+        and deleted = #{deleted} and student_sex like #{sex}
+    </select>
+    <select id="getStudentLimitByClass" resultMap="StudentClass">
+        select top ${pageSize} * from Student where class_no = #{classNo}
+        and student_no not in
+        (select top ${(pageNum - 1) * pageSize} student_no from Student where class_no = #{classNo}
+        and deleted = #{deleted} and student_sex like #{sex})
+        and deleted = #{deleted} and student_sex like #{sex}
+    </select>
+<!--添加学生-->
+    <insert id="addStudent" parameterType="map">
+        { call addStudent(
+        #{no, mode=IN, jdbcType=VARCHAR},
+        #{password, mode=IN, jdbcType=VARCHAR},
+        #{classNo, mode=IN, jdbcType=INTEGER},
+        #{sex, mode=IN, jdbcType=VARCHAR},
+        #{name, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </insert>
+<!--更改信息-->
+    <insert id="updateStudent" parameterType="map">
+        { call updateStudent(
+        #{type, mode=IN, jdbcType=INTEGER},
+        #{no, mode=IN, jdbcType=VARCHAR},
+        #{password, mode=IN, jdbcType=VARCHAR},
+        #{classNo, mode=IN, jdbcType=INTEGER},
+        #{sex, mode=IN, jdbcType=VARCHAR},
+        #{name, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </insert>
+<!--更改信息-->
+    <select id="checkStudentNo" resultType="_int">
+        { call checkStudentNo(
+        #{studentNo, mode=IN, jdbcType=VARCHAR}
+        ) }
+    </select>
+
+</mapper>

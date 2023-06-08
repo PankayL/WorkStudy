@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.database.mapper.StudentResumeMapper">
+<!--获取应聘信息的完整信息-->
+    <resultMap id="StudentResumeStudentPost" type="studentResume">
+        <result property="resumeDetails" column="resume_details"/>
+        <result property="resumeState" column="resume_state"/>
+        <result property="resumeNo" column="resume_no"/>
+        <result property="time" column="time"/>
+        <result property="time1" column="time"/>
+        <association property="student" column="student_no" javaType="student" select="getStudentById"/>
+        <association property="post" column="post_no" javaType="post" select="getPostById"/>
+    </resultMap>
+    <!--  获取student完整信息  -->
+    <select id="getStudentById" resultMap="studentClass">
+        select * from Student where student_no = #{student_no}
+    </select>
+    <resultMap id="studentClass" type="student">
+        <result property="studentNo" column="student_no"/>
+        <result property="studentPassword" column="student_password"/>
+        <result property="studentName" column="student_name"/>
+        <result property="studentSex" column="student_sex"/>
+        <result property="deleted" column="deleted"/>
+        <result property="stuName" column="stuName"/>
+        <association property="collegeClass" column="class_no" javaType="collegeClass" select="getClassById"/>
+    </resultMap>
+    <select id="getClassById" resultMap="ClassMajorCollege">
+        select * from CollegeClass where class_no = #{class_no}
+    </select>
+    <resultMap id="ClassMajorCollege" type="collegeClass">
+        <result property="classNo" column="class_no"/>
+        <result property="className" column="class_name"/>
+        <association property="collegeMajor" column="major_no" javaType="collegeMajor" select="getMajorById"/>
+    </resultMap>
+    <select id="getMajorById" resultMap="MajorCollege">
+        select * from CollegeMajor where major_no = #{major_no}
+    </select>
+    <resultMap id="MajorCollege" type="collegeMajor">
+        <result property="majorNo" column="major_no"/>
+        <result property="majorName" column="major_name"/>
+        <association property="college" column="college_no" javaType="College" select="getCollegeById"/>
+    </resultMap>
+    <select id="getCollegeById" resultType="college">
+        select * from College where college_no = #{college_no}
+    </select>
+    <!--  获取post完整信息  -->
+    <select id="getPostById" resultMap="PostCompany">
+        select * from Post where post_no = #{post_no}
+    </select>
+    <resultMap id="PostCompany" type="post">
+        <result property="postNo" column="post_no"/>
+        <result property="postTitle" column="post_title"/>
+        <result property="postDetails" column="post_details"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="postState" column="post_state"/>
+        <result property="deleted" column="deleted"/>
+        <result property="postMoney" column="post_money"/>
+        <result property="postCount" column="post_count"/>
+        <association property="postType" column="post_type" javaType="postType" select="getPostTypeById"/>
+        <association property="company" column="company_no" javaType="company" select="getCompanyById"/>
+    </resultMap>
+    <select id="getPostTypeById" resultType="postType">
+        select * from PostType where type_no = #{post_type}
+    </select>
+    <select id="getCompanyById" resultType="company">
+        select * from Company where company_no = #{company_no}
+    </select>
+<!--添加应聘信息-->
+    <insert id="addStudentResume">
+        {call addStudentResume(
+        #{postNo, mode=IN, jdbcType=INTEGER},
+        #{studentNo, mode=IN, jdbcType=VARCHAR},
+        #{resume, mode=IN, jdbcType=VARCHAR}
+        )}
+    </insert>
+<!--获取某学生在某招聘投递的最后一个应聘信息的时间-->
+    <select id="getStudentResumeByPostStudentLast" resultMap="StudentResumeStudentPost">
+        {call getStudentResumeByPostStudentLast(
+        #{postNo, mode=IN, jdbcType=INTEGER},
+        #{studentNo, mode=IN, jdbcType=VARCHAR}
+        )}
+    </select>
+<!--通过投递号，获取完整信息-->
+    <select id="getStudentResumeById" resultMap="StudentResumeStudentPost">
+        select * from StudentResume where resume_no = #{studentResumeNo}
+    </select>
+<!--分页查询学生的申请-->
+    <select id="getStudentResumeAllListLimitByStudentNo" resultMap="StudentResumeStudentPost">
+        select top ${pageSize} * from StudentResume where resume_no not in
+        (select top ${(pageNum - 1) * pageSize} resume_no from StudentResume where deleted = #{deleted} and student_no = #{studentNo} order by time desc)
+        and deleted = #{deleted} and student_no = #{studentNo} order by time desc
+    </select>
+    <select id="getStudentResumeListLimitByStudentNo" resultMap="StudentResumeStudentPost">
+        select top ${pageSize} * from StudentResume where resume_no not in
+        (select top ${(pageNum - 1) * pageSize} resume_no from StudentResume where student_no = #{studentNo}
+        and resume_state = #{resumeState} order by time desc)
+        and student_no = #{studentNo} and resume_state = #{resumeState} order by time desc
+    </select>
+    <select id="getStudentResumeListLimitByCompanyNo" resultMap="StudentResumeStudentPost">
+        select top ${pageSize} * from StudentResume where resume_no not in
+        (select top ${(pageNum - 1) * pageSize} resume_no from StudentResume where post_no in
+        (select post_no from Post where company_no = #{companyNo}) and deleted = #{deleted} order by resume_state asc)
+        and post_no in (select post_no from Post where company_no = #{companyNo}) and deleted = #{deleted}
+        order by resume_state asc
+    </select>
+<!--学生取消申请-->
+    <update id="deleteStudentResume">
+        {call deleteStudentResume(
+        #{resumeNo, mode=IN, jdbcType=INTEGER}
+        )}
+    </update>
+<!--学生离职-->
+    <update id="leaveStudentResume">
+        update StudentResume set deleted = #{deleted} where resume_no = #{resumeNo}
+    </update>
+<!--  单位获取应聘总数  -->
+    <select id="getStudentResumeTotalByCompanyNo" resultType="_int">
+        select count(*) from StudentResume where post_no in
+        (select post_no from Post where company_no = #{companyNo}) and deleted = #{deleted}
+    </select>
+<!--更新状态-->
+    <update id="updateStudentResumeState">
+        update StudentResume set resume_state = #{resumeState} where resume_no = #{resumeNo}
+    </update>
+</mapper>
